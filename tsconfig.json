@@ -1,0 +1,22 @@
+{
+  "compilerOptions": {
+    "paths": {
+      "shuttle-state": ["./src/index"]
+    },
+    "baseUrl": ".",
+    "target": "esnext",
+    "module": "esnext",
+    "jsx": "react",
+    "lib": ["esnext"],
+    "declaration": true,
+    "strict": true,
+    "moduleResolution": "node",
+    "noImplicitAny": true,
+    "esModuleInterop": true,
+    "downlevelIteration": true,
+    "skipLibCheck": true,
+    "outDir": "./dist"
+  },
+  "include": ["src/**/*", "tests/**/*"],
+  "exclude": ["node_modules", "dist"]
+}

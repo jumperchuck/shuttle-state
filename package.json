@@ -1,0 +1,106 @@
+{
+  "name": "shuttle-state",
+  "version": "0.0.1",
+  "description": "Generate a global state or a part state in React",
+  "private": false,
+  "author": "Dennis Chuck",
+  "license": "MIT",
+  "main": "index.js",
+  "module": "es/index.js",
+  "types": "index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./index.d.ts",
+      "module": "./es/index.js",
+      "default": "./index.js"
+    },
+    "./compare": {
+      "types": "./compare.d.ts",
+      "module": "./es/compare.js",
+      "default": "./compare.js"
+    },
+    "./context": {
+      "types": "./context.d.ts",
+      "module": "./es/context.js",
+      "default": "./context.js"
+    },
+    "./createApi": {
+      "types": "./createApi.d.ts",
+      "module": "./es/createApi.js",
+      "default": "./createApi.js"
+    },
+    "./createContainer": {
+      "types": "./createContainer.d.ts",
+      "module": "./es/createContainer.js",
+      "default": "./createContainer.js"
+    },
+    "./createState": {
+      "types": "./createState.d.ts",
+      "module": "./es/createState.js",
+      "default": "./createState.js"
+    }
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jumperchuck/shuttle-state"
+  },
+  "homepage": "https://github.com/jumperchuck/shuttle-state",
+  "keywords": [
+    "react",
+    "state",
+    "manager",
+    "atom",
+    "redux",
+    "store"
+  ],
+  "scripts": {
+    "prepare": "husky install && yarn build",
+    "prebuild": "node ./scripts/prebuild.js",
+    "build": "rollup -c",
+    "postbuild": "node ./scripts/postbuild.js",
+    "publish": "node ./scripts/publish.js",
+    "test": "jest",
+    "lint": "eslint --ext '.js,.ts,.tsx' ."
+  },
+  "lint-staged": {
+    "*.{js,ts,tsx}": [
+      "prettier --write",
+      "eslint"
+    ]
+  },
+  "devDependencies": {
+    "@babel/core": "^7.14.6",
+    "@babel/plugin-transform-typescript": "^7.14.6",
+    "@babel/preset-env": "^7.14.7",
+    "@commitlint/cli": "^12.1.4",
+    "@commitlint/config-conventional": "^12.1.4",
+    "@rollup/plugin-babel": "^5.3.0",
+    "@rollup/plugin-node-resolve": "^13.0.0",
+    "@rollup/plugin-typescript": "^8.2.1",
+    "@testing-library/react": "^12.0.0",
+    "@types/jest": "^26.0.23",
+    "@types/node": "^16.0.0",
+    "@types/react": "^17.0.13",
+    "@typescript-eslint/eslint-plugin": "^4.28.2",
+    "@typescript-eslint/parser": "^4.28.2",
+    "esbuild": "^0.12.15",
+    "eslint": "^7.30.0",
+    "eslint-config-prettier": "^8.3.0",
+    "eslint-plugin-jest": "^24.3.6",
+    "eslint-plugin-prettier": "^3.4.0",
+    "eslint-plugin-react": "^7.24.0",
+    "eslint-plugin-react-hooks": "^4.2.0",
+    "husky": "^6.0.0",
+    "jest": "^27.0.6",
+    "lint-staged": "^11.0.0",
+    "prettier": "^2.3.1",
+    "react": "^17.0.2",
+    "rollup": "^2.52.7",
+    "rollup-plugin-esbuild": "^4.5.0",
+    "shelljs": "^0.8.4",
+    "typescript": "^4.3.4"
+  },
+  "peerDependencies": {
+    "react": ">=16.8"
+  }
+}
