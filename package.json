@@ -1,6 +1,6 @@
 {
   "name": "shuttle-state",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "description": "Generate a global state or a part state in React",
   "private": false,
   "author": "Dennis Chuck",
