@@ -13,5 +13,5 @@ delete packageInfo.devDependencies;
 delete packageInfo['lint-staged'];
 fs.writeFileSync(
   path.resolve(__dirname, '../dist/package.json'),
-  JSON.stringify(packageInfo, null, '\t'),
+  JSON.stringify(packageInfo, null, '  '),
 );
