@@ -7,6 +7,15 @@ import esbuild from 'rollup-plugin-esbuild';
 const babelConfig = require('./babel.config');
 const extensions = ['.js', '.ts', '.tsx'];
 
+babelConfig.presets.forEach((item) => {
+  if (Array.isArray(item) && item[0] === '@babel/preset-env') {
+    item[1] = {
+      ...item[1],
+      modules: false,
+    };
+  }
+});
+
 function createDeclaration() {
   return {
     external: ['react'],

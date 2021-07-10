@@ -4,6 +4,10 @@
 
 > React状态管理器，创建全局状态，也可以穿梭在任意Provider下当作局部状态使用
 
+[![npm version](https://img.shields.io/npm/v/shuttle-state.svg?logo=npm)](https://www.npmjs.com/package/shuttle-state)
+[![npm bundle size (minified)](https://img.shields.io/bundlephobia/min/shuttle-state.svg?logo=javascript)](https://www.npmjs.com/package/shuttle-state)
+![React](https://img.shields.io/npm/dependency-version/shuttle-state/peer/react?logo=react)
+
 ```
 npm install --save shuttle-state
 # or
@@ -92,7 +96,7 @@ const App = () => {
 
 在组件内创建需要在unmount的时候`destroy`防止内存泄漏
 ```tsx
-import {useEffect} from 'react';
+import { useEffect } from 'react';
 import { Provider, createContainer } from 'shuttle-state';
 
 const App = () => {

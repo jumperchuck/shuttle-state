@@ -1,4 +1,25 @@
-import { shallow, deep } from '../src/compare';
+import { isShuttleState, isObject, shallow, deep } from '../src/compare';
+import { createState } from '../src';
+
+describe('is', () => {
+  expect(isShuttleState(createState(1))).toBe(true);
+  expect(isShuttleState({})).toBe(false);
+  expect(isShuttleState([])).toBe(false);
+  expect(isShuttleState(1)).toBe(false);
+  expect(isShuttleState('1')).toBe(false);
+  expect(isShuttleState(true)).toBe(false);
+  expect(isShuttleState(null)).toBe(false);
+  expect(isShuttleState(function () {})).toBe(false);
+
+  expect(isObject({})).toBe(true);
+  expect(isObject([], 'Array')).toBe(true);
+  expect(isObject(1, 'Number')).toBe(true);
+  expect(isObject('1', 'String')).toBe(true);
+  expect(isObject(true, 'Boolean')).toBe(true);
+  expect(isObject(null, 'Null')).toBe(true);
+  expect(isObject(function () {}, 'Function')).toBe(true);
+  expect(isObject(undefined, 'Undefined')).toBe(true);
+});
 
 describe('shallow', () => {
   it('compares primitive', () => {

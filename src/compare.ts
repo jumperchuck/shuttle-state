@@ -1,9 +1,13 @@
 export function isShuttleState(obj: unknown) {
-  return Object.prototype.toString.call(obj).startsWith('shuttle');
+  return (
+    isObject(obj, 'Function') &&
+    Object.prototype.hasOwnProperty.call(obj, 'toString') &&
+    (obj as Object).toString().startsWith('shuttle')
+  );
 }
 
-export function isObject(obj: unknown) {
-  return Object.prototype.toString.call(obj) === '[object Object]';
+export function isObject(obj: unknown, type = 'Object') {
+  return Object.prototype.toString.call(obj) === `[object ${type}]`;
 }
 
 export function shallow<T, U>(objA: T, objB: U) {

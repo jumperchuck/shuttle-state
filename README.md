@@ -96,7 +96,7 @@ const App = () => {
 
 Create in the component needs to `destroy` when unmount to prevent memory leakage.
 ```tsx
-import {useEffect} from 'react';
+import { useEffect } from 'react';
 import { Provider, createContainer } from 'shuttle-state';
 
 const App = () => {
