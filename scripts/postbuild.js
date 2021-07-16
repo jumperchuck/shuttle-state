@@ -3,8 +3,8 @@ const fs = require('fs');
 const path = require('path');
 
 shelljs.cp('-r', 'dist/src/*', 'dist/es');
-shelljs.mv('dist/src/*', 'dist');
-shelljs.rm('-rf', 'dist/{src,tests}');
+shelljs.cp('-r', 'dist/src/*', 'dist');
+shelljs.rm('-rf', 'dist/{src,tests,index.js,index.d.ts}');
 shelljs.cp('package.json', 'LICENSE', 'README.md', 'README-CN.md', 'dist');
 
 const packageInfo = require('../dist/package.json');

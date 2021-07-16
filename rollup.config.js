@@ -6,6 +6,7 @@ import esbuild from 'rollup-plugin-esbuild';
 
 const babelConfig = require('./babel.config');
 const extensions = ['.js', '.ts', '.tsx'];
+const external = ['react', 'shuttle-state'];
 
 babelConfig.presets.forEach((item) => {
   if (Array.isArray(item) && item[0] === '@babel/preset-env') {
@@ -16,20 +17,20 @@ babelConfig.presets.forEach((item) => {
   }
 });
 
-function createDeclaration() {
+function createDeclaration(input, outDir) {
   return {
-    external: ['react'],
-    input: 'src/index.ts',
+    external,
+    input: input,
     output: {
-      dir: 'dist',
+      dir: outDir,
     },
-    plugins: [typescript({ declaration: true, outDir: 'dist' })],
+    plugins: [typescript({ declaration: true, outDir: outDir })],
   };
 }
 
 function createCommonJS(input, output) {
   return {
-    external: ['react'],
+    external,
     input,
     output: {
       file: output,
@@ -50,7 +51,7 @@ function createCommonJS(input, output) {
 
 function createES(input, output) {
   return {
-    external: ['react'],
+    external,
     input: input,
     output: {
       file: output,
@@ -67,20 +68,19 @@ function createES(input, output) {
 }
 
 function createConfig(input, output) {
+  const [prefix, suffix] = output.split('.');
   return [
     createCommonJS(`src/${input}`, `dist/${output}`),
-    createES(`src/${input}`, `dist/es/${output}`),
+    createES(`src/${input}`, `dist/${prefix}.es.${suffix}`),
   ];
 }
 
-const baseConfigs = createConfig('index.ts', 'index.js');
-
-const extraConfigs = [
-  { input: 'compare.ts', output: 'compare.js' },
-  { input: 'context.ts', output: 'context.js' },
-  { input: 'createApi.ts', output: 'createApi.js' },
-  { input: 'createContainer.ts', output: 'createContainer.js' },
-  { input: 'createState.ts', output: 'createState.js' },
-].flatMap(({ input, output }) => createConfig(input, output));
-
-export default [createDeclaration(), ...baseConfigs, ...extraConfigs];
+export default function () {
+  return [
+    createDeclaration('src/index.ts', 'dist'),
+    ...createConfig('core/index.ts', 'core/index.js'),
+    ...createConfig('context/index.ts', 'context/index.js'),
+    ...createConfig('compare/index.ts', 'compare/index.js'),
+    ...createConfig('middleware/index.ts', 'middleware/index.js'),
+  ];
+}

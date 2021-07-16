@@ -1,20 +1,20 @@
 import { useEffect, useRef, useState } from 'react';
 import { Getter, Setter, ShuttleState } from './types';
 import createApi, { defaultEqualFn, defaultSelector } from './createApi';
-import { useApi } from './context';
+import context from './context';
 
 let id = 0;
 
-export default function createState<S>(getter: S | Getter<S>, setter?: Setter<S>) {
-  const key = `shuttle${++id}`;
+export default function createState<S, T = S>(getter: S | Getter<S>, setter?: Setter<T>) {
+  const key = `shuttle_state${++id}`;
 
   const api = createApi(getter, setter);
 
-  const useShuttleState: ShuttleState<S> = (
+  const useShuttleState: ShuttleState<S, T> = (
     selector = defaultSelector,
     equalFn = defaultEqualFn,
   ) => {
-    const currentApi = useApi(useShuttleState);
+    const currentApi = context.useApi(useShuttleState);
 
     const selectorRef = useRef(selector);
     selectorRef.current = selector;
@@ -22,7 +22,9 @@ export default function createState<S>(getter: S | Getter<S>, setter?: Setter<S>
     const equalFnRef = useRef(equalFn);
     equalFnRef.current = equalFn;
 
-    const [current, setCurrent] = useState(selectorRef.current(currentApi.getState()));
+    const [current, setCurrent] = useState(() =>
+      selectorRef.current(currentApi.getState()),
+    );
 
     const stateRef = useRef(current);
     stateRef.current = current;
@@ -48,6 +50,7 @@ export default function createState<S>(getter: S | Getter<S>, setter?: Setter<S>
   useShuttleState.subscribe = api.subscribe;
   useShuttleState.destroy = api.destroy;
   useShuttleState.clone = api.clone;
+  useShuttleState.use = api.use;
   useShuttleState.toString = () => key;
 
   return useShuttleState;

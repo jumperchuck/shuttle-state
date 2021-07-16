@@ -4,7 +4,10 @@ module.exports = {
   parser: '@typescript-eslint/parser',
   rules: {
     curly: ['warn', 'multi-line', 'consistent'],
-    'no-console': ['error', { allow: ['warn', 'error'] }],
+    'no-console': [
+      'error',
+      { allow: ['debug', 'info', 'group', 'groupEnd', 'warn', 'error'] },
+    ],
     'no-empty-pattern': 'warn',
     'no-duplicate-imports': 'error',
     'no-unused-labels': 'warn',
@@ -15,7 +18,10 @@ module.exports = {
         ignoreRestSiblings: true,
       },
     ],
-    '@typescript-eslint/no-unused-vars': 'error',
+    '@typescript-eslint/no-unused-vars': [
+      'warn',
+      { argsIgnorePattern: '^_', varsIgnorePattern: '^_' },
+    ],
   },
   settings: {},
   overrides: [

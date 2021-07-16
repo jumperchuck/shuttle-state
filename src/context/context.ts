@@ -1,5 +1,6 @@
 import React, { createContext, useContext } from 'react';
-import { ContainerType, ShuttleState } from './types';
+import { context, ShuttleState, ShuttleStateApi } from 'shuttle-state';
+import { ContainerType } from './types';
 
 export const Context = createContext<ContainerType | null>(null);
 
@@ -16,12 +17,14 @@ export const Consumer = Context.Consumer;
 
 export const useContainer = () => useContext(Context);
 
-export const useApi = <S>(shuttleState: ShuttleState<S>) => {
+export const useApi = <S, T>(shuttleState: ShuttleState<S, T>): ShuttleStateApi<S, T> => {
   const container = useContainer();
   if (container) {
     return container.getApi(shuttleState);
   }
   return shuttleState;
 };
+
+context.useApi = useApi;
 
 export default Context;

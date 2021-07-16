@@ -1,4 +1,5 @@
-import { createState, createContainer } from '../src';
+import { createState } from '../src';
+import { createContainer } from '../src/context';
 import { shallow } from '../src/compare';
 
 describe('createState().subscribe()', () => {
