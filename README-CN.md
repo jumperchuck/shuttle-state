@@ -287,6 +287,7 @@ container.getState(useValue);
 container.setState(useValue, 'new');
 container.resetState(useValue);
 container.subscribe(useValue, (newState, prevState) => {});
+container.destroy();
 ```
 
 ### 使用全局状态
@@ -299,7 +300,7 @@ const container = createContainer();
 container.addState(useValue);
 
 <Provider container={container}>
-  <Component />
+  <UseValue />
 </Provider>
 ```
 
@@ -350,6 +351,8 @@ import { logger } from 'shuttle-state/middleware';
 const useData = createState({});
 useData.use(logger('data'));
 ```
+
+## 中间件
 
 ## API
 
