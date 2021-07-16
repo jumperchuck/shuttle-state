@@ -14,6 +14,15 @@ npm install --save shuttle-state
 yarn add shuttle-state
 ```
 
+## Features
+
+- Like `Recoil` create an atom state
+- Simple and efficient, no providers needed, just like `useState` used
+- Can `get` / `set` / `subscribe` outside the component
+- Support `Context`, Perfect support `Typescript`
+- Support `Redux Devtools`, can use middleware extension function
+- Gzipped less than `1KB`
+
 ## Quick Start
 
 ### Create a state
@@ -23,15 +32,11 @@ It's a hook! You can put anything with `createState` to create persistent global
 import { createState } from 'shuttle-state';
 
 const useValue = createState('');
-const useCount = createState(0);
-const useList = createState(['China', 'GuangDong', 'ShenZhen']);
-const useProduct = createState({
-  name: 'water',
-  price: 100,
-});
 ```
 
-Then bind your component, no providers needed. Use it like `useState`
+### Use the state
+
+Then bind your component, no providers needed. Use it like `useState`.  with an API for `reset` to reset the initial state.
 ```tsx
 const Component = () => {
   const [value, setValue, resetValue] = useValue();
@@ -54,6 +59,11 @@ useValue.subscribe((newState, prevState) => {});
 
 Select your state and the component will re-render on changes.
 ```tsx
+const useProduct = createState({
+  name: 'water',
+  price: 100,
+});
+
 const Component = () => {
   const [name, setProduct, resetProduct] = useProduct(state => state.name);
   return (
@@ -68,56 +78,6 @@ const Component = () => {
     </div>
   );
 }
-```
-
-### Create a container
-
-Use in React Context, `createState` used in Provider will automatically create a new state in the current context
-```tsx
-import { Provider, createContainer } from 'shuttle-state';
-
-const container1 = createContainer();
-const container2 = createContainer();
-
-const App = () => {
-  return (
-    <div>
-      <Provider container={container2}>
-        <Component />
-      </Provider>
-      <Provider container={container2}>
-        <Component />
-      </Provider>
-      <Component />
-    </div>
-  );
-}
-```
-
-Create in the component needs to `destroy` when unmount to prevent memory leakage.
-```tsx
-import {useEffect} from 'react';
-import { Provider, createContainer } from 'shuttle-state';
-
-const App = () => {
-  const container = createContainer();
-
-  useEffect(() => container.destroy, [container]);
-
-  return (
-    <Provider container={container}>
-      <Component />
-    </Provider>
-  );
-}
-```
-
-`get` or `set` the state in the context outside the component.
-```tsx
-const container = createContainer();
-container.getState(useValue);
-container.setState(useValue, 'new');
-container.subscribe(useValue, (newState, prevState) => {});
 ```
 
 ## Advanced Usages
@@ -171,6 +131,12 @@ const useDoubledCount = createState(
 
 It detects changes with strict-equality `===` by default, this is efficient for atomic state.
 ```tsx
+const useDiscount = create({
+  name: 'discount',
+  value: 10,
+  type: 1,
+})
+
 // use in getter
 const useProduct = createState(({ get }) => {
   const discount = get(useDiscount, (state) => state.value);
@@ -187,7 +153,7 @@ import { shallow } from 'shuttle-state/compare';
 // use in getter
 const useProduct = createState(({ get }) => {
   const discount = get(useDiscount, (state) => ({ value: state.value, name: state.name }), shallow);
-  return ...
+  return { name: '', price: 100 - discount.name }
 });
 
 // use in component
@@ -225,26 +191,104 @@ useProduct.setState(state => ({ ...state, quantity: 1 }));
 unsub1();
 unsub2();
 unsub3();
-// (removing all listeners)
+// removing all listeners
 useProduct.destroy();
 ```
 
-In React Context, you need to get and subscribe to the current context through `CreateContainer`.
+## React Context
+
+`createState` defaults to create a global state, no need provide context. However, in some cases, it may be necessary to use a Context injection state or partial state.
+
+### Create a container
+
+Create a container with `createContainer` that returns an object that needs to be used with the Provider.
+
 ```tsx
+import { createState } from 'shuttle-state'
+import { createContainer } from 'shuttle-state/context';
+
 const container = createContainer();
 
-<Provider container={container}>
-  ...
-</Provider>
+const Page = () => {
+  return (
+    <Provider container={container}>
+      <Component />
+    </Provider>
+  )
+}
+```
 
-const name = container.getState(useProduct).name;
-const unsub1 = container.subscribe(useProduct, (newState, prevState) => {});
-const unsub2 = container.subscribe(useProduct, (newName, prevName) => {}, state => state.name);
-container.setState(useProduct, (state) => ({ ...state, name: '123' }));
+Create in the component needs to `destroy` when unmount to prevent memory leakage.
+```tsx
+import { useEffect } from 'react';
+import { Provider, createContainer } from 'shuttle-state';
+
+const App = () => {
+  const container = createContainer();
+
+  useEffect(() => container.destroy, [container]);
+
+  return (
+    <Provider container={container}>
+      <Component />
+    </Provider>
+  );
+}
+```
+
+### Use the container
+
+The `state` used in the current context automatically create a new initialization state and mounts it under `container`.
+
+```tsx
+import { createState } from 'shuttle-state'
+import { createContainer } from 'shuttle-state/context';
+
+const container = createContainer();
+
+const useValue = createState('');
+
+const Component = () => {
+  const [value, setValue] = useValue();
+  return <input value={value} onChange={e => setValue(e.target.value)} />
+}
+
+const Page1 = () => {
+  return <Component />
+}
+
+const Page2 = () => {
+  return <Component />
+}
+
+const Page3 = () => {
+  return (
+    <Provider container={container}>
+      <Component />
+    </Provider>
+  )
+}
+
+const Page4 = () => {
+  return (
+    <Provider container={container}>
+      <Component />
+    </Provider>
+  )
+}
+```
+> In the example, Page1 and Page2 use the global state, Page3 and Page4 use the same container, so Page3 and Page4 share the same state
+
+`get` / `set` / `subscribe` the state in the context outside the component.
+```tsx
+container.getState(useValue);
+container.setState(useValue, 'new');
+container.resetState(useValue);
+container.subscribe(useValue, (newState, prevState) => {});
 container.destroy();
 ```
 
-### Using a global state in React Context
+### Using a global state
 
 State used under the provider will automatically create a new state mounted to the current `container` by default, if you want to use the global state in the current context, you need to add this state in `container`
 ```tsx
@@ -253,7 +297,7 @@ const container = createContainer();
 container.addState(useValue);
 
 <Provider container={container}>
-  <UseValue />
+  <useValue />
 </Provider>
 ```
 
@@ -265,6 +309,7 @@ const useValue3 = createState(({ get }) => get(useValue1, Number) + get(useValue
 
 const container = createContainer();
 container.addState(useValue1);
+container.addState(useValue2);
 
 <Provider container={container}>
   <UseValue1 />
@@ -274,21 +319,57 @@ container.addState(useValue1);
 ```
 
 Clone a new container
-```
+```tsx
 const newContainer = container.clone();
 ```
 
 ## Debug
-🤔
+
+### Use Redux Devtools
+
+Using the `devtools` plugin, the state changes will be recorded and output to Redux devtools, taking a string parameter to indicate the different states
+
+```tsx
+import { createState } from 'shuttle-state';
+import { devtools } from 'shuttle-state/middleware';
+
+const useData = createState({});
+useData.use(devtools('data'));
+```
+
+### Use Logger
+
+Using the `logger` plugin, the state change will be printed to the console, taking a string parameter to indicate the different states
+
+```tsx
+import { createState } from 'shuttle-state';
+import { logger } from 'shuttle-state/middleware';
+
+const useData = createState({});
+useData.use(logger('data'));
+```
+
+## Middleware
 
 ## API
 
-### createState
+### core
+```tsx
+import { createState, createApi } from 'shuttle-state';
+```
 
-### createContainer
+### context
+```tsx
+import { Provider, createContainer, useApi, useContainer } from 'shuttle-state/context';
+```
 
-### createApi
+### compare
+```tsx
+import { shallow, deep, isShuttleState } from 'shuttle-state/compare';
+```
 
-### useContainer
+### middleware
+```tsx
+import { logger, devtools } from 'shuttle-state/middleware';
+```
 
-### useApi

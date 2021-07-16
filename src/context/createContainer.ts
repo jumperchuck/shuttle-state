@@ -1,9 +1,15 @@
-import { ContainerType, ShuttleStateApi } from './types';
-
-export type ApiMappings = Record<string, ShuttleStateApi<any> & { isClone?: boolean }>;
+import { ApiOperator } from 'shuttle-state';
+import { ContainerType, ApiMappings } from './types';
 
 export default function createContainer(cloneApis?: ApiMappings) {
   const apis: ApiMappings = {};
+
+  const operator: ApiOperator = {
+    get: (shuttleState) => container.getState(shuttleState),
+    set: (shuttleState, newState) => container.setState(shuttleState, newState),
+    reset: (shuttleState) => container.resetState(shuttleState),
+    subscribe: (shuttleState, listener) => container.subscribe(shuttleState, listener),
+  };
 
   const container: ContainerType = {
     getApi(shuttleState) {
@@ -15,36 +21,31 @@ export default function createContainer(cloneApis?: ApiMappings) {
       const key = shuttleState.toString();
       if (!apis[key]) {
         apis[key] = clone
-          ? { ...shuttleState.clone(container), isClone: clone }
+          ? { ...shuttleState.clone(operator), isClone: clone }
           : shuttleState;
       }
     },
     removeState(shuttleState) {
       const key = shuttleState.toString();
-      if (apis[key]?.isClone) {
+      if (apis[key] && apis[key].isClone) {
         apis[key].destroy();
       }
       delete apis[key];
     },
     hasState(shuttleState) {
-      const key = shuttleState.toString();
-      return !!apis[key];
+      return !!apis[shuttleState.toString()];
     },
     getState(shuttleState) {
-      const key = shuttleState.toString();
-      if (!apis[key]) container.addState(shuttleState, true);
-      return apis[key].getState();
+      return container.getApi(shuttleState).getState();
     },
     setState(shuttleState, newState) {
-      const key = shuttleState.toString();
-      if (!apis[key]) container.addState(shuttleState, true);
-      apis[key].setState(newState);
+      return container.getApi(shuttleState).setState(newState);
     },
     resetState(shuttleState) {
       if (shuttleState) {
-        const key = shuttleState.toString();
-        if (!apis[key]) container.addState(shuttleState, true);
-        else apis[key]?.resetState();
+        if (container.hasState(shuttleState)) {
+          container.getApi(shuttleState).resetState();
+        }
       } else {
         Object.values(apis).forEach((item) => {
           if (item.isClone) {
@@ -54,9 +55,7 @@ export default function createContainer(cloneApis?: ApiMappings) {
       }
     },
     subscribe(shuttleState, listener, selector, equalFn) {
-      const key = shuttleState.toString();
-      if (!apis[key]) container.addState(shuttleState, true);
-      return apis[key].subscribe(listener, selector, equalFn);
+      return container.getApi(shuttleState).subscribe(listener, selector, equalFn);
     },
     destroy() {
       Object.values(apis).forEach((item) => {
@@ -73,7 +72,7 @@ export default function createContainer(cloneApis?: ApiMappings) {
   if (cloneApis) {
     Object.keys(cloneApis).forEach((key) => {
       const { isClone, clone } = cloneApis[key];
-      apis[key] = isClone ? { isClone, ...clone(container) } : cloneApis[key];
+      apis[key] = isClone ? { isClone, ...clone(operator) } : cloneApis[key];
     });
   }
 

@@ -1,10 +1,9 @@
 import React from 'react';
 import { createState, ShuttleState } from 'shuttle-state';
+import { devtools, logger } from 'shuttle-state/middleware';
 
 const useValue1 = createState('');
-
-const useValue2 = createState('');
-
+const useValue2 = createState({});
 const useValue3 = createState(({ get }) => {
   const value1 = get(useValue1);
   const value2 = get(useValue2, Number);

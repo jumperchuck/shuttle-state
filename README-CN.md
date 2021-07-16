@@ -4,30 +4,40 @@
 
 > React状态管理器，创建全局状态，也可以穿梭在任意Provider下当作局部状态使用
 
+[![npm version](https://img.shields.io/npm/v/shuttle-state.svg?logo=npm)](https://www.npmjs.com/package/shuttle-state)
+[![npm bundle size (minified)](https://img.shields.io/bundlephobia/min/shuttle-state.svg?logo=javascript)](https://www.npmjs.com/package/shuttle-state)
+![React](https://img.shields.io/npm/dependency-version/shuttle-state/peer/react?logo=react)
+
 ```
 npm install --save shuttle-state
 # or
 yarn add shuttle-state
 ```
 
+## 特性
+
+- 类似`Recoil`可创建原子state
+- 简单高效，无需Provider包裹，就像`useState`一样使用
+- 可在组件外部`获取`/`修改`/`订阅`
+- 支持`Context`, 支持`Typescript`
+- 支持`Redux Devtools`，可使用中间件扩展功能
+- Gzipped后不到`1kb`
+
 ## 快速上手
 
-### 创建一个State
+### 创建一个 State
 
 返回的是一个hook，可以传递任何类型的参数，经过`createState`包装后，就变成了持久化，且全局共享的state
 ```tsx
 import { createState } from 'shuttle-state';
 
 const useValue = createState('');
-const useCount = createState(0);
-const useList = createState(['China', 'GuangDong', 'ShenZhen']);
-const useProduct = createState({
-  name: 'water',
-  price: 100,
-});
 ```
 
-然后在组件里使用，不需要用Provider包裹，就像`useState`那样使用
+### 使用 State
+
+然后在组件里使用，不需要用Provider包裹，就像`useState`那样使用，多了一个`reset`重置初始化状态的api
+
 ```tsx
 const Component = () => {
   const [value, setValue, resetValue] = useValue();
@@ -48,8 +58,13 @@ useValue.resetState();
 useValue.subscribe((newState, prevState) => {});
 ```
 
-传递selector函数，组件将在变化时重新渲染
+传递`selector`函数，组件将在变化时重新渲染
 ```tsx
+const useProduct = createState({
+  name: 'water',
+  price: 100,
+});
+
 const Component = () => {
   const [name, setProduct, resetProduct] = useProduct(state => state.name);
   return (
@@ -64,56 +79,6 @@ const Component = () => {
     </div>
   );
 }
-```
-
-### 创建一个Container
-
-基于React Context使用，被Provider包裹的`state`会自动创建一个新的状态在当前上下文
-```tsx
-import { Provider, createContainer } from 'shuttle-state';
-
-const container1 = createContainer();
-const container2 = createContainer();
-
-const App = () => {
-  return (
-    <div>
-      <Provider container={container2}>
-        <Component />
-      </Provider>
-      <Provider container={container2}>
-        <Component />
-      </Provider>
-      <Component />
-    </div>
-  );
-}
-```
-
-在组件内创建需要在unmount的时候`destroy`防止内存泄漏
-```tsx
-import {useEffect} from 'react';
-import { Provider, createContainer } from 'shuttle-state';
-
-const App = () => {
-  const container = createContainer();
-
-  useEffect(() => container.destroy, [container]);
-
-  return (
-    <Provider container={container}>
-      <Component />
-    </Provider>
-  );
-}
-```
-
-在组件外部获取或者修改当前上下文中的`state`
-```tsx
-const container = createContainer();
-container.getState(useValue);
-container.setState(useValue, 'new');
-container.subscribe(useValue, (newState, prevState) => {});
 ```
 
 ## 进阶方法
@@ -167,6 +132,12 @@ const useDoubledCount = createState(
 
 默认情况下，是使用`===`检测更改，对于原子状态是很有效的
 ```tsx
+const useDiscount = create({
+  name: 'discount',
+  value: 10,
+  type: 1,
+})
+
 // getter函数内
 const useProduct = createState(({ get }) => {
   const discount = get(useDiscount, (state) => state.value);
@@ -183,7 +154,7 @@ import { shallow } from 'shuttle-state/compare';
 // getter函数内
 const useProduct = createState(({ get }) => {
   const discount = get(useDiscount, (state) => ({ value: state.value, name: state.name }), shallow);
-  return ...
+  return { name: '', price: 100 - discount.name }
 });
 
 // 组件内
@@ -198,7 +169,7 @@ useProduct(state => state, deep);
 useProduct(state => state, (newState, prevState) => compare(newState, prevState));
 ```
 
-### 在组件外部获取/修改/监听状态
+### 在组件外部获取/修改/订阅状态
 
 某些情况下，我们需要在组件外部去修改或者订阅状态的变化
 
@@ -225,22 +196,102 @@ unsub3();
 useProduct.destroy();
 ```
 
-在React Context下，需要通过`createContainer`来获取和订阅当前上下文中的state
+## React Context
+
+使用`createState`默认是创建全局状态，不需要提供context。但在某些情况下，可能需要使用context注入状态或者隔离局部状态
+
+### 创建一个 Container
+
+通过`createContainer`创建一个容器，返回的是一个对象，需要配合Provider使用
+
 ```tsx
+import { createState } from 'shuttle-state'
+import { createContainer } from 'shuttle-state/context';
+
 const container = createContainer();
 
-<Provider container={container}>
-  ...
-</Provider>
+const Page = () => {
+  return (
+    <Provider container={container}>
+      <Component />
+    </Provider>
+  )
+}
+```
 
-const name = container.getState(useProduct).name;
-const unsub1 = container.subscribe(useProduct, (newState, prevState) => {});
-const unsub2 = container.subscribe(useProduct, (newName, prevName) => {}, state => state.name);
-container.setState(useProduct, (state) => ({ ...state, name: '123' }));
+在组件内创建需要在unmount的时候`destroy`防止内存泄漏
+
+```tsx
+import { useEffect } from 'react';
+import { Provider, createContainer } from 'shuttle-state';
+
+const App = () => {
+  const container = createContainer();
+
+  useEffect(() => container.destroy, [container]);
+
+  return (
+    <Provider container={container}>
+      <Component />
+    </Provider>
+  );
+}
+```
+
+### 使用 Container
+
+在当前上下文中使用的`state`会自动创建一个新的初始化状态挂载到`container`下
+
+```tsx
+import { createState } from 'shuttle-state'
+import { createContainer } from 'shuttle-state/context';
+
+const container = createContainer();
+
+const useValue = createState('');
+
+const Component = () => {
+  const [value, setValue] = useValue();
+  return <input value={value} onChange={e => setValue(e.target.value)} />
+}
+
+const Page1 = () => {
+  return <Component />
+}
+
+const Page2 = () => {
+  return <Component />
+}
+
+const Page3 = () => {
+  return (
+    <Provider container={container}>
+      <Component />
+    </Provider>
+  )
+}
+
+const Page4 = () => {
+  return (
+    <Provider container={container}>
+      <Component />
+    </Provider>
+  )
+}
+```
+> 在上面例子里，Page1和Page2使用的是全局状态，Page3和Page4使用的同一个container，所以Page3和Page4共享同个状态
+
+在组件外部获取/修改/订阅当前上下文中的`state`
+
+```tsx
+container.getState(useValue);
+container.setState(useValue, 'new');
+container.resetState(useValue);
+container.subscribe(useValue, (newState, prevState) => {});
 container.destroy();
 ```
 
-### 在React Context下使用全局状态
+### 使用全局状态
 
 默认情况下，在Provider下使用的state都会自动创建一个新的状态挂载到当前的`container`里，如果想在当前Context中使用全局状态而不是创建局部状态，
 需要提前将这个state添加进`container`里
@@ -262,6 +313,7 @@ const useValue3 = createState(({ get }) => get(useValue1, Number) + get(useValue
 
 const container = createContainer();
 container.addState(useValue1);
+container.addState(useValue2);
 
 <Provider container={container}>
   <UseValue1 />
@@ -271,21 +323,57 @@ container.addState(useValue1);
 ```
 
 复制一个新的container
-```
+```tsx
 const newContainer = container.clone();
 ```
 
 ## Debug
-🤔
+
+### 使用 Redux Devtools
+
+使用`devtools`插件，会记录state的变化输出到Redux Devtools，接受一个string参数来标示不同的状态
+
+```tsx
+import { createState } from 'shuttle-state';
+import { devtools } from 'shuttle-state/middleware';
+
+const useData = createState({});
+useData.use(devtools('data'));
+```
+
+### 使用 Logger
+
+使用`logger`插件，会打印state的变化到控制台，接受一个string参数来标示不同的状态
+
+```tsx
+import { createState } from 'shuttle-state';
+import { logger } from 'shuttle-state/middleware';
+
+const useData = createState({});
+useData.use(logger('data'));
+```
+
+## 中间件
 
 ## API
 
-### createState
+### core
+```tsx
+import { createState, createApi } from 'shuttle-state';
+```
 
-### createContainer
+### context
+```tsx
+import { Provider, createContainer, useApi, useContainer } from 'shuttle-state/context';
+```
 
-### createApi
+### compare
+```tsx
+import { shallow, deep, isShuttleState } from 'shuttle-state/compare';
+```
 
-### useContainer
+### middleware
+```tsx
+import { logger, devtools } from 'shuttle-state/middleware';
+```
 
-### useApi

@@ -9,11 +9,17 @@ import {
   ShuttleStateApi,
   Selector,
   EqualFn,
-  ContainerType,
+  ApiOperator,
 } from './types';
 
-type Deps = {
+type DepInfo = {
   value: any;
+  selector: Selector<any>;
+  equalFn: EqualFn<any>;
+};
+
+type ListenerInfo = {
+  listener: Listener<any>;
   selector: Selector<any>;
   equalFn: EqualFn<any>;
 };
@@ -22,28 +28,30 @@ export const defaultSelector = <S, V = S>(state: S) => state as unknown as V;
 
 export const defaultEqualFn = Object.is;
 
+export const defaultOperator: ApiOperator = {
+  get: (shuttleState) => shuttleState.getState(),
+  set: (shuttleState, newState) => shuttleState.setState(newState),
+  reset: (shuttleState) => shuttleState.resetState(),
+  subscribe: (shuttleState, listener) => shuttleState.subscribe(listener),
+};
+
 export default function createApi<S, T = S>(
   getter: Getter<S>,
   setter?: Setter<T>,
-  container?: ContainerType,
+  operator = defaultOperator,
 ): ShuttleStateApi<S, T> {
   const registeredDeps: Record<
     string,
     {
-      deps: Deps[];
+      deps: DepInfo[];
       unsubscribe: Unsubscribe;
     }
   > = {};
 
   const setterOptions: SetterOptions = {
-    get: (shuttleState) =>
-      container ? container.getState(shuttleState) : shuttleState.getState(),
-    set: (shuttleState, newState) =>
-      container
-        ? container.setState(shuttleState, newState)
-        : shuttleState.setState(newState),
-    reset: (shuttleState) =>
-      container ? container.resetState(shuttleState) : shuttleState.resetState(),
+    get: operator.get,
+    set: operator.set,
+    reset: operator.reset,
   };
 
   const getterOptions: GetterOptions = {
@@ -53,23 +61,23 @@ export default function createApi<S, T = S>(
       equalFn = defaultEqualFn,
     ) => {
       const key = shuttleState.toString();
-      const value = selector(setterOptions.get(shuttleState));
+      const value = selector(operator.get(shuttleState));
       if (!registeredDeps[key]) {
-        const deps: Deps[] = [];
+        const deps: DepInfo[] = [];
         const listener = (newValue: any) => {
           if (deps.some((item) => !item.equalFn(item.selector(newValue), item.value))) {
             notify(initialState());
           }
         };
-        const unsubscribe = container
-          ? container.subscribe(shuttleState, listener)
-          : shuttleState.subscribe(listener);
+        const unsubscribe = operator.subscribe(shuttleState, listener);
         registeredDeps[key] = { deps, unsubscribe };
       }
       registeredDeps[key].deps.push({ value, selector, equalFn });
       return value;
     },
   };
+
+  const listeners = new Set<ListenerInfo>();
 
   const initialState = () => {
     Object.values(registeredDeps).forEach((item) => {
@@ -86,17 +94,11 @@ export default function createApi<S, T = S>(
 
   let state: S = initialState();
 
-  const listeners = new Set<{
-    listener: Listener<any>;
-    selector: Selector<any>;
-    equalFn: EqualFn<any>;
-  }>();
-
   const notify = (newState: S) => {
     if (state === newState) return;
     const prevState = state;
     state = newState;
-    for (let { listener, selector, equalFn } of listeners) {
+    for (const { listener, selector, equalFn } of listeners) {
       const newValue = selector(newState);
       const preValue = selector(prevState);
       if (!equalFn(newValue, preValue)) {
@@ -105,7 +107,7 @@ export default function createApi<S, T = S>(
     }
   };
 
-  return {
+  let api: ShuttleStateApi<S, T> = {
     getState() {
       return state;
     },
@@ -133,8 +135,33 @@ export default function createApi<S, T = S>(
       });
       listeners.clear();
     },
-    clone(container) {
-      return createApi(getter, setter, container);
+    clone(operator) {
+      return createApi(getter, setter, operator);
+    },
+    use() {},
+  };
+
+  return {
+    getState() {
+      return api.getState();
+    },
+    setState(action) {
+      return api.setState(action);
+    },
+    resetState() {
+      return api.resetState();
+    },
+    subscribe(listener, selector = defaultSelector, equalFn = defaultEqualFn) {
+      return api.subscribe(listener, selector, equalFn);
+    },
+    destroy() {
+      return api.destroy();
+    },
+    clone(operator) {
+      return api.clone(operator);
+    },
+    use(middleware) {
+      api = middleware(api);
     },
   };
 }

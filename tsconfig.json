@@ -1,13 +1,16 @@
 {
   "compilerOptions": {
     "paths": {
-      "shuttle-state": ["./src/index"]
+      "shuttle-state": ["./src"]
     },
     "baseUrl": ".",
     "target": "esnext",
     "module": "esnext",
     "jsx": "react",
-    "lib": ["esnext"],
+    "lib": [
+      "dom",
+      "esnext"
+    ],
     "declaration": true,
     "strict": true,
     "moduleResolution": "node",

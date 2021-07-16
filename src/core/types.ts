@@ -19,30 +19,19 @@ export type GetterOptions = {
 export type Getter<T> = T | Promise<T> | ((options: GetterOptions) => T | Promise<T>);
 
 export type SetterOptions = {
-  get: <S>(shuttleState: ShuttleState<S>) => S;
-  set: <S>(shuttleState: ShuttleState<S>, newState: S) => void;
-  reset: <S>(shuttleState: ShuttleState<S>) => void;
+  get: <S, T>(shuttleState: ShuttleState<S, T>) => S;
+  set: <TState extends ShuttleState<any>>(
+    shuttleState: TState,
+    newState: SetStateAction<GetSetStateType<TState>>,
+  ) => void;
+  reset: <S, T>(shuttleState: ShuttleState<S, T>) => void;
 };
 
 export type Setter<T> = (options: SetterOptions, newValue: T) => void;
 
-export interface ContainerType {
-  getApi: <S>(shuttleState: ShuttleState<S>) => ShuttleStateApi<S>;
-  addState: <S>(shuttleState: ShuttleState<S>, clone?: boolean) => void;
-  removeState: <S>(shuttleState: ShuttleState<S>) => void;
-  hasState: <S>(shuttleState: ShuttleState<S>) => boolean;
-  getState: <S>(shuttleState: ShuttleState<S>) => S;
-  setState: <S>(shuttleState: ShuttleState<S>, newState: SetStateAction<S>) => void;
-  resetState: <S>(shuttleState?: ShuttleState<S>) => void;
-  subscribe: <S, V = S>(
-    shuttleState: ShuttleState<S>,
-    listener: Listener<V>,
-    selector?: Selector<S, V>,
-    equalFn?: EqualFn<V>,
-  ) => Unsubscribe;
-  destroy: () => void;
-  clone: () => ContainerType;
-}
+export type ApiOperator = SetterOptions & {
+  subscribe: <T>(shuttleState: ShuttleState<T>, listener: Listener<T>) => Unsubscribe;
+};
 
 export interface ShuttleState<S, T = S> extends ShuttleStateApi<S, T> {
   <V = S>(selector?: Selector<S, V>, equalFn?: EqualFn<V>): [
@@ -62,5 +51,16 @@ export interface ShuttleStateApi<S, T = S> {
     equalFn?: EqualFn<V>,
   ) => Unsubscribe;
   destroy: () => void;
-  clone: (container?: ContainerType) => ShuttleStateApi<S, T>;
+  clone: (operator?: ApiOperator) => ShuttleStateApi<S, T>;
+  use: (middleware: Middleware) => void;
 }
+
+export interface Middleware {
+  (api: ShuttleStateApi<any>): ShuttleStateApi<any>;
+}
+
+export type GetGetStateType<Api> = Api extends ShuttleStateApi<infer S> ? S : unknown;
+
+export type GetSetStateType<Api> = Api extends ShuttleStateApi<infer S, infer T>
+  ? T
+  : unknown;

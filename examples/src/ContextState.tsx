@@ -1,5 +1,6 @@
 import React from 'react';
-import { Provider, createState, createContainer, ShuttleState } from 'shuttle-state';
+import { createState, ShuttleState } from 'shuttle-state';
+import { Provider, createContainer } from 'shuttle-state/context';
 
 const useValue1 = createState('');
 
