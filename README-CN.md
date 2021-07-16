@@ -21,6 +21,7 @@ yarn add shuttle-state
 - 可在组件外部`获取`/`修改`/`订阅`
 - 支持`Context`, 支持`Typescript`
 - 支持`Redux Devtools`，可使用中间件扩展功能
+- Gzipped后不到`1kb`
 
 ## 快速上手
 

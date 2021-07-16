@@ -95,6 +95,7 @@
     "react": "^17.0.2",
     "rollup": "^2.52.7",
     "rollup-plugin-esbuild": "^4.5.0",
+    "rollup-plugin-size-snapshot": "^0.12.0",
     "shelljs": "^0.8.4",
     "typescript": "^4.3.4"
   },

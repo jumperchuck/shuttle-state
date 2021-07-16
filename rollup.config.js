@@ -1,12 +1,17 @@
 import path from 'path';
+import fs from 'fs';
 import babel from '@rollup/plugin-babel';
 import resolve from '@rollup/plugin-node-resolve';
 import typescript from '@rollup/plugin-typescript';
 import esbuild from 'rollup-plugin-esbuild';
+import { sizeSnapshot } from 'rollup-plugin-size-snapshot';
 
 const babelConfig = require('./babel.config');
 const extensions = ['.js', '.ts', '.tsx'];
 const external = ['react', 'shuttle-state'];
+const sizePath = path.resolve('./size-snapshot');
+
+fs.mkdirSync(sizePath);
 
 babelConfig.presets.forEach((item) => {
   if (Array.isArray(item) && item[0] === '@babel/preset-env') {
@@ -29,6 +34,8 @@ function createDeclaration(input, outDir) {
 }
 
 function createCommonJS(input, output) {
+  const dir = output.split('/')[1];
+  const snapshotPath = `${sizePath}/${dir}.size-snapshot.json`;
   return {
     external,
     input,
@@ -45,11 +52,14 @@ function createCommonJS(input, output) {
         comments: false,
         babelHelpers: 'bundled',
       }),
+      sizeSnapshot({ snapshotPath }),
     ],
   };
 }
 
 function createES(input, output) {
+  const dir = output.split('/')[1];
+  const snapshotPath = `${sizePath}/${dir}.size-snapshot.json`;
   return {
     external,
     input: input,
@@ -63,6 +73,7 @@ function createES(input, output) {
         minify: false,
         tsconfig: path.resolve('./tsconfig.json'),
       }),
+      sizeSnapshot({ snapshotPath }),
     ],
   };
 }

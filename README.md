@@ -20,7 +20,8 @@ yarn add shuttle-state
 - Simple and efficient, no providers needed, just like `useState` used
 - Can `get` / `set` / `subscribe` outside the component
 - Support `Context`, Perfect support `Typescript`
-- Support `Redux Devtools`, can use middleware extension function 
+- Support `Redux Devtools`, can use middleware extension function
+- Gzipped less than `1KB`
 
 ## Quick Start
 
@@ -348,7 +349,7 @@ const useData = createState({});
 useData.use(logger('data'));
 ```
 
-## 中间件
+## Middleware
 
 ## API
 

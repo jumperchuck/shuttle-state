@@ -63,14 +63,20 @@ export default function devtools(name?: string): Middleware {
           } else {
             api.setState(JSON.parse(message.state));
           }
-        } else if (message.type === 'DISPATCH' && message.payload?.type === 'COMMIT') {
+        } else if (
+          message.type === 'DISPATCH' &&
+          message.payload &&
+          message.payload.type === 'COMMIT'
+        ) {
           devtools.init(api.getState());
         } else if (
           message.type === 'DISPATCH' &&
-          message.payload?.type === 'IMPORT_STATE'
+          message.payload &&
+          message.payload.type === 'IMPORT_STATE'
         ) {
-          const actions = message.payload.nextLiftedState?.actionsById;
-          const computedStates = message.payload.nextLiftedState?.computedStates || [];
+          const { nextLiftedState } = message.payload;
+          const actions = nextLiftedState ? nextLiftedState.actionsById : undefined;
+          const computedStates = nextLiftedState ? nextLiftedState.computedStates : [];
 
           computedStates.forEach(({ state }: { state: any }, index: number) => {
             const action = actions[index] || `${prefix}setState`;
