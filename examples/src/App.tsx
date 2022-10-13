@@ -4,6 +4,7 @@ import Todos from './todos';
 import TextLength from './text-length';
 import Middleware from './middleware';
 import Context from './context';
+import Getter from './getter';
 
 const Examples = [
   { title: 'todos', Component: Todos },
@@ -11,6 +12,7 @@ const Examples = [
   { title: 'text-length', Component: TextLength },
   { title: 'middleware', Component: Middleware },
   { title: 'context', Component: Context },
+  { title: 'getter', Component: Getter },
 ];
 
 function App() {

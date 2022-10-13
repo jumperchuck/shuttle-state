@@ -6,7 +6,7 @@ import {
   Selector,
   EqualFn,
   Unsubscribe,
-  GetSetStateType,
+  SetStateType,
 } from 'shuttle-state';
 
 export type ApiMappings = Record<string, ShuttleStateApi<any> & { isClone?: boolean }>;
@@ -19,7 +19,7 @@ export interface ContainerType {
   getState: <S, T>(shuttleState: ShuttleState<S, T>) => S;
   setState: <TState extends ShuttleState<any>>(
     shuttleState: TState,
-    newState: SetStateAction<GetSetStateType<TState>>,
+    newState: SetStateAction<SetStateType<TState>>,
   ) => void;
   resetState: <S, T>(shuttleState?: ShuttleState<S, T>) => void;
   subscribe: <S, V = S>(

@@ -12,9 +12,11 @@ export default function () {
 
   return (
     <div>
+      {/* @ts-ignore */}
       <Provider container={container}>
         <Todos />
       </Provider>
+      {/* @ts-ignore */}
       <Provider container={localContainer}>
         <Todos />
       </Provider>

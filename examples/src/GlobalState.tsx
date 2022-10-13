@@ -1,6 +1,5 @@
 import React from 'react';
 import { createState, ShuttleState } from 'shuttle-state';
-import { devtools, logger } from 'shuttle-state/middleware';
 
 const useValue1 = createState('');
 const useValue2 = createState({});

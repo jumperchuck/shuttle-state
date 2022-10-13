@@ -6,14 +6,11 @@ import context from './context';
 let id = 0;
 
 export default function createState<S, T = S>(getter: S | Getter<S>, setter?: Setter<T>) {
-  const key = `shuttle_state${++id}`;
+  const key = `shuttle-state-${++id}`;
 
   const api = createApi(getter, setter);
 
-  const useShuttleState: ShuttleState<S, T> = (
-    selector = defaultSelector,
-    equalFn = defaultEqualFn,
-  ) => {
+  const useShuttleState = ((selector = defaultSelector, equalFn = defaultEqualFn) => {
     const currentApi = context.useApi(useShuttleState);
 
     const selectorRef = useRef(selector);
@@ -42,16 +39,9 @@ export default function createState<S, T = S>(getter: S | Getter<S>, setter?: Se
     }, [currentApi]);
 
     return [current, currentApi.setState, currentApi.resetState];
-  };
+  }) as ShuttleState<S, T>;
 
-  useShuttleState.getState = api.getState;
-  useShuttleState.setState = api.setState;
-  useShuttleState.resetState = api.resetState;
-  useShuttleState.subscribe = api.subscribe;
-  useShuttleState.destroy = api.destroy;
-  useShuttleState.clone = api.clone;
-  useShuttleState.use = api.use;
   useShuttleState.toString = () => key;
 
-  return useShuttleState;
+  return Object.assign(useShuttleState, api);
 }
