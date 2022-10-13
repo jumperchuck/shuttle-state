@@ -22,7 +22,7 @@ export type SetterOptions = {
   get: <S, T>(shuttleState: ShuttleState<S, T>) => S;
   set: <TState extends ShuttleState<any>>(
     shuttleState: TState,
-    newState: SetStateAction<GetSetStateType<TState>>,
+    newState: SetStateAction<SetStateType<TState>>,
   ) => void;
   reset: <S, T>(shuttleState: ShuttleState<S, T>) => void;
 };
@@ -56,11 +56,13 @@ export interface ShuttleStateApi<S, T = S> {
 }
 
 export interface Middleware {
-  (api: ShuttleStateApi<any>): ShuttleStateApi<any>;
+  (api: ShuttleStateApi<any>): {
+    [key in keyof ShuttleStateApi<any>]?: (
+      next: ShuttleStateApi<any>[key],
+    ) => ShuttleStateApi<any>[key];
+  };
 }
 
-export type GetGetStateType<Api> = Api extends ShuttleStateApi<infer S> ? S : unknown;
+export type GetStateType<Api> = Api extends ShuttleStateApi<infer S> ? S : unknown;
 
-export type GetSetStateType<Api> = Api extends ShuttleStateApi<infer S, infer T>
-  ? T
-  : unknown;
+export type SetStateType<Api> = Api extends ShuttleStateApi<any, infer T> ? T : unknown;

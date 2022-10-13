@@ -1,20 +1,22 @@
-export function isShuttleState(obj: unknown) {
-  return isObject(obj, 'Function') && (obj as Function).toString().startsWith('shuttle');
+import { ShuttleState } from 'shuttle-state';
+
+export function isShuttleState(obj: unknown): obj is ShuttleState<any> {
+  return isObject(obj, 'Function') && obj.toString().startsWith('shuttle-state');
 }
 
-export function isObject(obj: unknown, type = 'Object') {
+export function isObject(obj: unknown, type = 'Object'): obj is Object {
   return Object.prototype.toString.call(obj) === `[object ${type}]`;
 }
 
 export function shallow<T, U>(objA: T, objB: U) {
-  return index(objA, objB, false);
+  return compare(objA, objB, false);
 }
 
 export function deep<T, U>(objA: T, objB: U) {
-  return index(objA, objB, true);
+  return compare(objA, objB, true);
 }
 
-export default function index<T, U>(objA: T, objB: U, deep: boolean) {
+export default function compare<T, U>(objA: T, objB: U, deep: boolean) {
   if (Object.is(objA, objB)) {
     return true;
   }
@@ -31,7 +33,7 @@ export default function index<T, U>(objA: T, objB: U, deep: boolean) {
         return false;
       }
       if (deep) {
-        if (!index(objA[keysA[i] as keyof T], objB[keysA[i] as keyof U], deep)) {
+        if (!compare(objA[keysA[i] as keyof T], objB[keysA[i] as keyof U], deep)) {
           return false;
         }
       } else {

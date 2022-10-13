@@ -44,22 +44,13 @@ export default function devtools(name?: string): Middleware {
     if (extension) {
       const devtools = extension.connect({ name });
       const prefix = name ? `${name} > ` : '';
-      const { setState, resetState } = api;
-      api.setState = (action) => {
-        setState(action);
-        devtools.send(`${prefix}setState`, api.getState());
-      };
-      api.resetState = () => {
-        resetState();
-        devtools.send(`${prefix}resetState`, api.getState());
-      };
       devtools.subscribe((message) => {
         if (message.type === 'DISPATCH' && message.state) {
           if (
             message.payload.type === 'JUMP_TO_ACTION' ||
             message.payload.type === 'JUMP_TO_STATE'
           ) {
-            setState(JSON.parse(message.state));
+            api.setState(JSON.parse(message.state));
           } else {
             api.setState(JSON.parse(message.state));
           }
@@ -84,14 +75,28 @@ export default function devtools(name?: string): Middleware {
             if (index === 0) {
               devtools.init(state);
             } else {
-              setState(state);
+              api.setState(state);
               devtools.send(action, api.getState());
             }
           });
         }
       });
       devtools.init(api.getState());
+      return {
+        setState(next) {
+          return (action) => {
+            next(action);
+            devtools.send(`${prefix}setState`, api.getState());
+          };
+        },
+        resetState(next) {
+          return () => {
+            next();
+            devtools.send(`${prefix}resetState`, api.getState());
+          };
+        },
+      };
     }
-    return api;
+    return {};
   };
 }

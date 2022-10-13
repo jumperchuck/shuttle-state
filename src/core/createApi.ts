@@ -10,6 +10,7 @@ import {
   Selector,
   EqualFn,
   ApiOperator,
+  Middleware,
 } from './types';
 
 type DepInfo = {
@@ -107,7 +108,18 @@ export default function createApi<S, T = S>(
     }
   };
 
-  let api: ShuttleStateApi<S, T> = {
+  const middlewares: ReturnType<Middleware>[] = [];
+
+  const compose = (key: keyof ShuttleStateApi<S>, next: (...args: any[]) => any) => {
+    return middlewares.reduce((handle, item) => {
+      if (item[key]) {
+        return item[key]!(handle);
+      }
+      return handle;
+    }, next);
+  };
+
+  const api: ShuttleStateApi<S, T> = {
     getState() {
       return state;
     },
@@ -138,30 +150,32 @@ export default function createApi<S, T = S>(
     clone(operator) {
       return createApi(getter, setter, operator);
     },
-    use() {},
+    use(middleware) {
+      middlewares.push(middleware(api));
+    },
   };
 
   return {
     getState() {
-      return api.getState();
+      return compose('getState', api.getState)();
     },
     setState(action) {
-      return api.setState(action);
+      return compose('setState', api.setState)(action);
     },
     resetState() {
-      return api.resetState();
+      return compose('resetState', api.resetState)();
     },
     subscribe(listener, selector = defaultSelector, equalFn = defaultEqualFn) {
-      return api.subscribe(listener, selector, equalFn);
+      return compose('subscribe', api.subscribe)(listener, selector, equalFn);
     },
     destroy() {
-      return api.destroy();
+      return compose('destroy', api.destroy)();
     },
     clone(operator) {
-      return api.clone(operator);
+      return compose('clone', api.clone)(operator);
     },
     use(middleware) {
-      api = middleware(api);
+      return compose('use', api.use)(middleware);
     },
   };
 }
