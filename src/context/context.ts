@@ -1,10 +1,12 @@
-import React, { createContext, useContext } from 'react';
+import React, { createContext, useContext, PropsWithChildren } from 'react';
 import { context, ShuttleState, ShuttleStateApi } from 'shuttle-state';
 import { ContainerType } from './types';
 
 export const Context = createContext<ContainerType | null>(null);
 
-export const Provider: React.FC<{ container: ContainerType }> = (props) => {
+export const Provider: React.FC<PropsWithChildren<{ container: ContainerType }>> = (
+  props,
+) => {
   const { container, ...rest } = props;
 
   return React.createElement(Context.Provider, {

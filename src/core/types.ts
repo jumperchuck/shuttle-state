@@ -14,6 +14,11 @@ export type GetterOptions = {
     selector?: Selector<S, V>,
     equalFn?: EqualFn<S>,
   ) => V;
+  set: <TState extends ShuttleState<any>>(
+    shuttleState: TState,
+    newState: SetStateAction<SetStateType<TState>>,
+  ) => void;
+  reset: <S, T>(shuttleState: ShuttleState<S, T>) => void;
 };
 
 export type Getter<T> = T | Promise<T> | ((options: GetterOptions) => T | Promise<T>);

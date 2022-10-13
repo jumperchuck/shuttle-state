@@ -76,6 +76,8 @@ export default function createApi<S, T = S>(
       registeredDeps[key].deps.push({ value, selector, equalFn });
       return value;
     },
+    set: operator.set,
+    reset: operator.reset,
   };
 
   const listeners = new Set<ListenerInfo>();
@@ -99,13 +101,13 @@ export default function createApi<S, T = S>(
     if (state === newState) return;
     const prevState = state;
     state = newState;
-    for (const { listener, selector, equalFn } of listeners) {
+    listeners.forEach(({ listener, selector, equalFn }) => {
       const newValue = selector(newState);
       const preValue = selector(prevState);
       if (!equalFn(newValue, preValue)) {
         listener(newValue, preValue);
       }
-    }
+    });
   };
 
   const middlewares: ReturnType<Middleware>[] = [];
