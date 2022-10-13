@@ -1,5 +1,6 @@
 import path from 'path';
 import fs from 'fs';
+import shell from 'shelljs';
 import babel from '@rollup/plugin-babel';
 import resolve from '@rollup/plugin-node-resolve';
 import typescript from '@rollup/plugin-typescript';
@@ -9,23 +10,19 @@ import { sizeSnapshot } from 'rollup-plugin-size-snapshot';
 const babelConfig = require('./babel.config');
 const extensions = ['.js', '.ts', '.tsx'];
 const external = ['react', 'shuttle-state'];
-const sizePath = path.resolve('./size-snapshot');
 
-fs.mkdirSync(sizePath);
+shell.rm('-rf', 'dist');
+shell.rm('-rf', 'size-snapshot');
+fs.mkdirSync('size-snapshot');
 
-babelConfig.presets.forEach((item) => {
-  if (Array.isArray(item) && item[0] === '@babel/preset-env') {
-    item[1] = {
-      ...item[1],
-      modules: false,
-    };
-  }
-});
+babelConfig.presets.find(
+  (item) => Array.isArray(item) && item[0] === '@babel/preset-env',
+)[1].modules = false;
 
-function createDeclaration(input, outDir) {
+function createDeclarationConfig(input, outDir) {
   return {
     external,
-    input: input,
+    input,
     output: {
       dir: outDir,
     },
@@ -33,14 +30,14 @@ function createDeclaration(input, outDir) {
   };
 }
 
-function createCommonJS(input, output) {
+function createCJSConfig(input, output) {
   const dir = output.split('/')[1];
-  const snapshotPath = `${sizePath}/${dir}.size-snapshot.json`;
+  const snapshotPath = `size-snapshot/${dir}.size-snapshot.json`;
   return {
     external,
     input,
     output: {
-      file: output,
+      file: `${output}.js`,
       format: 'cjs',
       exports: 'named',
     },
@@ -57,14 +54,14 @@ function createCommonJS(input, output) {
   };
 }
 
-function createES(input, output) {
+function createESMConfig(input, output) {
   const dir = output.split('/')[1];
-  const snapshotPath = `${sizePath}/${dir}.size-snapshot.json`;
+  const snapshotPath = `size-snapshot/${dir}.size-snapshot.json`;
   return {
     external,
-    input: input,
+    input,
     output: {
-      file: output,
+      file: `${output}.es.js`,
       format: 'es',
     },
     plugins: [
@@ -79,19 +76,16 @@ function createES(input, output) {
 }
 
 function createConfig(input, output) {
-  const [prefix, suffix] = output.split('.');
-  return [
-    createCommonJS(`src/${input}`, `dist/${output}`),
-    createES(`src/${input}`, `dist/${prefix}.es.${suffix}`),
-  ];
+  const [prefix] = output.split('.');
+  return [createCJSConfig(input, prefix), createESMConfig(input, prefix)];
 }
 
 export default function () {
   return [
-    createDeclaration('src/index.ts', 'dist'),
-    ...createConfig('core/index.ts', 'core/index.js'),
-    ...createConfig('context/index.ts', 'context/index.js'),
-    ...createConfig('compare/index.ts', 'compare/index.js'),
-    ...createConfig('middleware/index.ts', 'middleware/index.js'),
+    createDeclarationConfig('src/index.ts', 'dist'),
+    ...createConfig('src/core/index.ts', 'dist/core/index.js'),
+    ...createConfig('src/context/index.ts', 'dist/context/index.js'),
+    ...createConfig('src/compare/index.ts', 'dist/compare/index.js'),
+    ...createConfig('src/middleware/index.ts', 'dist/middleware/index.js'),
   ];
 }
